@@ -67,13 +67,20 @@
         /* MODO ZEN (FOCO TOTAL) RESPONSIVO */
         .focus-mode-active .glass-card { background: rgba(255, 255, 255, 0.85); }
         .focus-mode-active .hide-on-focus { display: none !important; }
+        /* BUGFIX: ao ocultar as outras colunas, o <main> (flex) fica com um único filho
+           (#centerColumn) que continua com sua largura de 50% (desktop) ou altura de conteúdo
+           (mobile) — sem isso ele "sobra" no início do eixo (esquerda no desktop, topo no mobile)
+           em vez de ficar centralizado. 'margin:auto' centraliza nos dois eixos (linha no
+           desktop / coluna no mobile) e nunca corta conteúdo que ultrapasse a tela — diferente
+           de 'justify-content:center', que pode esconder o topo quando o conteúdo dá overflow. */
+        .focus-mode-active #centerColumn { margin: auto; }
         @media (min-width: 1024px) {
-            .focus-mode-active #centerColumn { transform: scale(1.05); }
+            .focus-mode-active #centerColumn .m-auto { transform: scale(1.05); transition: transform 0.5s ease;}
         }
     </style>
 </head>
 
-<body class="theme-focus min-h-[100dvh] lg:h-[100dvh] lg:overflow-hidden w-full flex flex-col p-3 md:p-5 lg:p-6 relative text-gray-700">
+<body class="theme-focus min-h-[100dvh] lg:h-[100dvh] lg:overflow-hidden w-full flex flex-col p-3 md:p-4 lg:p-6 relative text-gray-700">
 
     <!-- Iframe do YouTube protegido (Invisível) -->
     <div style="position: fixed; top: 0; left: 0; width: 100px; height: 100px; opacity: 0.001; pointer-events: none; z-index: -9999;">
@@ -87,7 +94,7 @@
     <canvas id="weatherCanvas" class="fixed inset-0 pointer-events-none z-[1]"></canvas>
 
     <!-- CABEÇALHO -->
-    <header class="w-full max-w-7xl mx-auto flex-shrink-0 grid grid-cols-1 md:grid-cols-3 items-center gap-3 lg:gap-4 z-10 mb-4 lg:mb-5 hide-on-focus transition-all duration-500">
+    <header class="w-full max-w-7xl mx-auto shrink-0 grid grid-cols-1 md:grid-cols-3 items-center gap-3 lg:gap-4 z-10 mb-4 hide-on-focus transition-all duration-500">
         <div class="glass-card p-3 lg:p-4 flex items-center justify-between">
             <div>
                 <h1 class="text-lg lg:text-xl font-bold tracking-wide leading-tight" id="liveTime">00:00</h1>
@@ -101,7 +108,7 @@
         </div>
 
         <div class="glass-card p-3 lg:p-4 text-center flex items-center justify-center min-h-[56px] lg:min-h-[72px] hidden md:flex">
-            <p id="quoteDisplay" class="text-xs lg:text-sm font-semibold italic text-gray-600">"É justo que muito custe o que muito vale."</p>
+            <p id="quoteDisplay" class="text-xs lg:text-sm font-semibold italic text-gray-600 px-2">"É justo que muito custe o que muito vale."</p>
         </div>
 
         <div class="glass-card p-3 lg:p-4 flex items-center justify-between gap-2">
@@ -111,14 +118,15 @@
                 <option value="jardim">Jardim (Pétalas)</option>
                 <option value="espaco">Espaço (Estrelas)</option>
                 <option value="noite_chuvosa">Noite Chuvosa (Chuva)</option>
-                <option value="biblioteca">Biblioteca (Poeira Mágica)</option>
+                <option value="biblioteca">Biblioteca (Mágico)</option>
                 <option value="cafe">Cafeteria (Vapor)</option>
             </select>
         </div>
     </header>
 
     <!-- ÁREA PRINCIPAL -->
-    <main class="w-full max-w-7xl mx-auto flex-1 flex flex-col lg:flex-row items-start gap-4 lg:gap-6 z-10 min-h-0 overflow-y-auto lg:overflow-visible custom-scroll">
+    <!-- min-h-0 é essencial para o overflow funcionar corretamente no Flexbox em tablets/desktops -->
+    <main class="w-full max-w-7xl mx-auto flex-1 flex flex-col lg:flex-row items-start gap-4 lg:gap-6 z-10 min-h-0 overflow-y-auto lg:overflow-hidden custom-scroll">
         
         <!-- COLUNA ESQUERDA: Tarefas & Hábitos -->
         <section class="w-full lg:w-[calc(25%-0.75rem)] flex flex-col gap-4 hide-on-focus transition-all duration-500 order-2 lg:order-1 lg:h-full lg:overflow-y-auto custom-scroll lg:pr-2 pb-4 lg:pb-0">
@@ -156,44 +164,50 @@
         </section>
 
         <!-- COLUNA CENTRAL: Cronômetro -->
-        <section id="centerColumn" class="w-full lg:w-[calc(50%-1.5rem)] flex flex-col items-center justify-center gap-4 lg:gap-6 transition-all duration-700 order-1 lg:order-2 lg:h-full pb-4 lg:pb-0">
-            <div id="mascoteContainer" class="w-32 h-32 md:w-40 md:h-40 xl:w-44 xl:h-44 flex items-center justify-center relative select-none cursor-pointer drop-shadow-md shrink-0">
-                <lottie-player id="lottieMascot" src="https://assets9.lottiefiles.com/packages/lf20_bhebjzpu.json" background="transparent" speed="1" style="width: 100%; height: 100%;" loop autoplay></lottie-player>
-                <div id="mascotBubble" class="absolute -top-4 lg:-top-6 bg-white border border-gray-100 rounded-xl px-3 py-1 text-[10px] lg:text-xs font-bold text-gray-700 shadow-md opacity-0 pointer-events-none transform scale-90 transition-all duration-300 whitespace-nowrap">
-                    Estou com você! ☕
-                </div>
-            </div>
-
-            <div class="glass-card w-full max-w-md p-5 md:p-6 lg:p-8 flex flex-col items-center relative overflow-hidden shrink-0 mx-auto">
-                <div class="flex gap-1 lg:gap-2 mb-4 lg:mb-6 bg-black/5 p-1 lg:p-1.5 rounded-2xl w-full justify-between">
-                    <button onclick="switchMode('focus')" id="tab-focus" class="text-[10px] lg:text-xs font-bold py-2 px-2 lg:px-4 rounded-xl transition-all flex-1 text-center truncate text-gray-800">🍅 Foco</button>
-                    <button onclick="switchMode('short_break')" id="tab-short_break" class="text-[10px] lg:text-xs font-bold py-2 px-2 lg:px-4 rounded-xl transition-all flex-1 text-center truncate text-gray-500 hover:text-gray-700">🍃 Curta</button>
-                    <button onclick="switchMode('long_break')" id="tab-long_break" class="text-[10px] lg:text-xs font-bold py-2 px-2 lg:px-4 rounded-xl transition-all flex-1 text-center truncate text-gray-500 hover:text-gray-700">💤 Longa</button>
-                </div>
-
-                <div class="relative w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 flex items-center justify-center mb-5 lg:mb-6 shrink-0">
-                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="45" stroke="rgba(0,0,0,0.03)" stroke-width="5" fill="transparent"/>
-                        <circle id="progressCircle" cx="50" cy="50" r="45" stroke="var(--accent-color)" stroke-width="5" fill="transparent" 
-                                style="stroke-dasharray: 282.7; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear;" stroke-linecap="round"/>
-                    </svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span id="timerCountdown" class="text-4xl md:text-5xl font-bold tracking-tight text-gray-800 drop-shadow-sm">25:00</span>
-                        <span id="currentSessionLabel" class="text-[9px] lg:text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">Sessão #1</span>
+        <!-- O segredo do 'travamento': Usamos 'm-auto' no wrapper interno para não quebrar o flexbox vertical! -->
+        <section id="centerColumn" class="w-full lg:w-[calc(50%-1.5rem)] flex flex-col transition-all duration-700 order-1 lg:order-2 lg:h-full lg:overflow-y-auto custom-scroll pb-4 lg:pb-0">
+            
+            <div class="m-auto w-full flex flex-col items-center justify-center gap-3 lg:gap-4 py-2">
+                <!-- Mascote Adaptativo: Diminui no 'lg' para caber em Tablets na horizontal, cresce no 'xl' -->
+                <div id="mascoteContainer" class="w-28 h-28 md:w-36 md:h-36 lg:w-32 lg:h-32 xl:w-40 xl:h-40 flex items-center justify-center relative select-none cursor-pointer drop-shadow-md shrink-0 transition-all">
+                    <lottie-player id="lottieMascot" src="https://assets9.lottiefiles.com/packages/lf20_bhebjzpu.json" background="transparent" speed="1" style="width: 100%; height: 100%;" loop autoplay></lottie-player>
+                    <div id="mascotBubble" class="absolute -top-4 bg-white border border-gray-100 rounded-xl px-3 py-1 text-[10px] lg:text-xs font-bold text-gray-700 shadow-md opacity-0 pointer-events-none transform scale-90 transition-all duration-300 whitespace-nowrap">
+                        Estou com você! ☕
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 lg:gap-4 w-full mb-3 lg:mb-4">
-                    <button id="resetTimerBtn" class="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-white/80 border border-gray-200/50 shadow-xs text-gray-600 hover:text-gray-800 hover:bg-white flex items-center justify-center transition-all text-sm lg:text-lg active:scale-90 shrink-0"><i class="fa-solid fa-arrow-rotate-left"></i></button>
-                    <button id="toggleTimerBtn" class="btn-cozy flex-1 h-12 lg:h-14 rounded-2xl font-bold text-sm lg:text-base shadow-sm flex items-center justify-center gap-2 tracking-wide text-white">
-                        <i class="fa-solid fa-play" id="toggleTimerIcon"></i> <span id="toggleTimerText">Iniciar Foco</span>
+                <div class="glass-card w-full max-w-md p-4 md:p-6 lg:p-5 xl:p-8 flex flex-col items-center relative overflow-hidden shrink-0 mx-auto transition-all">
+                    <div class="flex gap-1 lg:gap-2 mb-4 lg:mb-5 bg-black/5 p-1 lg:p-1.5 rounded-2xl w-full justify-between">
+                        <button onclick="switchMode('focus')" id="tab-focus" class="text-[10px] lg:text-xs font-bold py-2 px-2 lg:px-4 rounded-xl transition-all flex-1 text-center truncate text-gray-800">🍅 Foco</button>
+                        <button onclick="switchMode('short_break')" id="tab-short_break" class="text-[10px] lg:text-xs font-bold py-2 px-2 lg:px-4 rounded-xl transition-all flex-1 text-center truncate text-gray-500 hover:text-gray-700">🍃 Curta</button>
+                        <button onclick="switchMode('long_break')" id="tab-long_break" class="text-[10px] lg:text-xs font-bold py-2 px-2 lg:px-4 rounded-xl transition-all flex-1 text-center truncate text-gray-500 hover:text-gray-700">💤 Longa</button>
+                    </div>
+
+                    <!-- Timer Adaptativo -->
+                    <div class="relative w-48 h-48 md:w-56 md:h-56 lg:w-48 lg:h-48 xl:w-60 xl:h-60 flex items-center justify-center mb-4 lg:mb-5 shrink-0 transition-all">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" stroke="rgba(0,0,0,0.03)" stroke-width="5" fill="transparent"/>
+                            <circle id="progressCircle" cx="50" cy="50" r="45" stroke="var(--accent-color)" stroke-width="5" fill="transparent" 
+                                    style="stroke-dasharray: 282.7; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear;" stroke-linecap="round"/>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="timerCountdown" class="text-4xl md:text-5xl lg:text-4xl xl:text-5xl font-bold tracking-tight text-gray-800 drop-shadow-sm transition-all">25:00</span>
+                            <span id="currentSessionLabel" class="text-[9px] lg:text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">Sessão #1</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 lg:gap-4 w-full mb-2 lg:mb-3">
+                        <button id="resetTimerBtn" class="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-white/80 border border-gray-200/50 shadow-xs text-gray-600 hover:text-gray-800 hover:bg-white flex items-center justify-center transition-all text-sm lg:text-lg active:scale-90 shrink-0"><i class="fa-solid fa-arrow-rotate-left"></i></button>
+                        <button id="toggleTimerBtn" class="btn-cozy flex-1 h-12 lg:h-14 rounded-2xl font-bold text-sm lg:text-base shadow-sm flex items-center justify-center gap-2 tracking-wide text-white">
+                            <i class="fa-solid fa-play" id="toggleTimerIcon"></i> <span id="toggleTimerText">Iniciar Foco</span>
+                        </button>
+                        <button id="skipTimerBtn" class="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-white/80 border border-gray-200/50 shadow-xs text-gray-600 hover:text-gray-800 hover:bg-white flex items-center justify-center transition-all text-sm lg:text-lg active:scale-90 shrink-0"><i class="fa-solid fa-forward"></i></button>
+                    </div>
+                    
+                    <button id="toggleFocusModeBtn" class="text-[10px] lg:text-xs font-bold text-gray-500 hover:text-gray-700 transition-all flex items-center gap-1.5 py-1.5 px-3 rounded-full hover:bg-black/5 mt-1">
+                        <i class="fa-solid fa-eye-slash"></i> Modo Zen / Foco Total
                     </button>
-                    <button id="skipTimerBtn" class="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-white/80 border border-gray-200/50 shadow-xs text-gray-600 hover:text-gray-800 hover:bg-white flex items-center justify-center transition-all text-sm lg:text-lg active:scale-90 shrink-0"><i class="fa-solid fa-forward"></i></button>
                 </div>
-                
-                <button id="toggleFocusModeBtn" class="text-[10px] lg:text-xs font-bold text-gray-500 hover:text-gray-700 transition-all flex items-center gap-1.5 py-1.5 px-3 rounded-full hover:bg-black/5 mt-1">
-                    <i class="fa-solid fa-eye-slash"></i> Modo Zen / Foco Total
-                </button>
             </div>
         </section>
 
@@ -259,8 +273,8 @@
     </main>
 
     <!-- RODAPÉ ATUALIZADO -->
-    <footer class="w-full max-w-7xl mx-auto flex-shrink-0 flex flex-row items-center justify-between gap-2 mt-4 lg:mt-5 pt-3 border-t border-black/5 z-10 hide-on-focus transition-all duration-500">
-        <p class="text-[10px] lg:text-xs text-gray-600 font-bold truncate pr-2 tracking-wide drop-shadow-sm">© 2026 CozyPomodoro. Seu santuário de produtividade. Feito com amor por Diogo Leonardo ❤️</p>
+    <footer class="w-full max-w-7xl mx-auto shrink-0 flex flex-row items-center justify-between gap-2 mt-4 lg:mt-5 pt-3 border-t border-black/5 z-10 hide-on-focus transition-all duration-500">
+        <p class="text-[10px] lg:text-xs text-gray-600 font-bold truncate pr-2 tracking-wide drop-shadow-sm">© 2026 CozyPomodoro. Seu santuário de produtividade. Feito com amor por Diogo Lanoir ❤️</p>
         <button onclick="openModal('settingsModal')" class="text-[10px] lg:text-xs font-bold text-gray-600 hover:text-gray-800 bg-white/60 px-3 py-1.5 rounded-xl border border-white transition-all shadow-xs shrink-0"><i class="fa-solid fa-sliders mr-1"></i> Configurações</button>
     </footer>
 
@@ -304,7 +318,6 @@
     <!-- SCRIPTS ======================================================= -->
     <script>
         // --- FUNÇÃO AUXILIAR DE FUSO HORÁRIO LOCAL ---
-        // Pega a data exata do dispositivo local, evitando bugs com UTC que avançam o dia prematuramente
         function getLocalDateStr() {
             const now = new Date();
             const year = now.getFullYear();
@@ -529,7 +542,7 @@
 
         function switchModeVisuals(mode) {
             const isDesktop = window.innerWidth >= 1024;
-            document.body.className = `theme-${mode} min-h-[100dvh] w-full flex flex-col p-3 md:p-5 lg:p-6 relative text-gray-700 ${isDesktop ? 'lg:h-[100dvh] lg:overflow-hidden' : ''}`;
+            document.body.className = `theme-${mode} min-h-[100dvh] w-full flex flex-col p-3 md:p-4 lg:p-6 relative text-gray-700 ${isDesktop ? 'lg:h-[100dvh] lg:overflow-hidden' : ''}`;
             const lottieEl = document.getElementById('lottieMascot');
             if(lottieEl.load) lottieEl.load(lottieMascots[mode]); else lottieEl.setAttribute('src', lottieMascots[mode]);
             ['focus', 'short_break', 'long_break'].forEach(m => {
